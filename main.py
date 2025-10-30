@@ -13,19 +13,23 @@ def create_app():
     def chat():
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            return jsonify({"error": "GOOGLE_API_KEY missing"}), 500
+            return jsonify({"error": "Missing GOOGLE_API_KEY"}), 500
 
         genai.configure(api_key=api_key)
+        model_id = os.getenv("MODEL_ID", "models/gemini-1.5-flash")
+        model = genai.GenerativeModel(model_id)
 
-        model_name = os.getenv("MODEL_ID", "models/gemini-1.5-flash")
-        model = genai.GenerativeModel(model_name)
+        try:
+            data = request.get_json(silent=True) or {}
+            user_text = data.get("q", "Say hello to me")
 
-        data = request.get_json(silent=True) or {}
-        user_text = data.get("q", "Say hello to me in one short sentence.")
+            # ✅ Correct structure for Gemini
+            response = model.generate_content([{"role": "user", "parts": [{"text": user_text}]}])
+            return jsonify({"answer": response.text})
 
-        resp = model.generate_content(user_text)
-        # resp.text is the simplest way to return content
-        return jsonify({"answer": resp.text})
+        except Exception as e:
+            # capture the real Python error in logs
+            return jsonify({"error": str(e)}), 500
 
     return app
 
