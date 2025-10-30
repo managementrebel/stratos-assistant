@@ -11,19 +11,23 @@ def create_app():
 
     @app.post("/chat")
     def chat():
-        data = request.get_json(silent=True) or {}
-        text = data.get("q", "Hello!")
+        try:
+            data = request.get_json(silent=True) or {}
+            text = data.get("q") or data.get("message") or "Hello!"
 
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            return jsonify({"error": "GOOGLE_API_KEY missing"}), 500
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                return jsonify({"error": "Missing GOOGLE_API_KEY"}), 500
 
-        genai.configure(api_key=api_key)
-        model_id = os.getenv("MODEL_ID", "gemini-1.5-flash")
-        model = genai.GenerativeModel(model_id)
+            model_id = os.getenv("MODEL_ID", "models/gemini-1.5-flash")
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(model_id)
 
-        resp = model.generate_content(text)
-        return jsonify({"answer": resp.text})
+            response = model.generate_content(text)
+
+            return jsonify({"answer": response.text})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     return app
 
