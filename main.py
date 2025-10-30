@@ -10,7 +10,7 @@ def create_app():
 
     @app.post("/chat")
     def chat():
-        # Load env at request time so missing keys don't crash the worker
+        # Load key at request time so a missing key doesn't crash the worker
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             return jsonify({"error": "GOOGLE_API_KEY not set in environment"}), 500
@@ -21,7 +21,7 @@ def create_app():
         model = os.getenv("MODEL_ID", "models/gemini-1.5-flash")
         data = request.get_json(silent=True) or {}
         text = data.get("q", "Explain Stratos packages in under 120 words.")
-        resp = genai.chat(model=model, messages=[{"role": "user", "content": text}])
+        resp = genai.chat(model=model, messages=[{"role":"user","content":text}])
         return jsonify({"answer": resp.last})
 
     return app
