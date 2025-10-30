@@ -6,7 +6,7 @@ def create_app():
     app = Flask(__name__)
 
     @app.get("/")
-    def health():
+    def home():
         return "Stratos Assistant is up."
 
     @app.post("/chat")
@@ -19,13 +19,16 @@ def create_app():
             if not api_key:
                 return jsonify({"error": "Missing GOOGLE_API_KEY"}), 500
 
-            model_id = os.getenv("MODEL_ID", "models/gemini-1.5-flash")
             genai.configure(api_key=api_key)
+
+            model_id = os.getenv("MODEL_ID", "models/gemini-1.5-flash")
             model = genai.GenerativeModel(model_id)
 
+            # ✅ No “role”: only plain string input
             response = model.generate_content(text)
 
             return jsonify({"answer": response.text})
+
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
